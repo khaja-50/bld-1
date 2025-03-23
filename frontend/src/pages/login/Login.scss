@@ -17,15 +17,15 @@ $secondary-color: #8c0000;
 
     .left {
       flex: 1;
-      background: linear-gradient(0deg, rgba(106, 0, 0, 0.544) 39%, rgba(202, 25, 25, 0.533) 100%),
-        url('https://images.pexels.com/photos/4226922/pexels-photo-4226922.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1') center;
-      background-size: cover;
-      padding: 50px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      color: white;
-
+  background: linear-gradient(0deg, rgba(106, 0, 0, 0.544) 39%, rgba(202, 25, 25, 0.533) 100%),
+    url("https://t4.ftcdn.net/jpg/12/20/21/57/360_F_1220215785_aORk7bOjZlWwC71UGUokv7SOFsewwdZv.jpg") center;
+  background-size: cover;
+  padding: 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: white;
+  justify-content: center;
       h1 {
         font-size: 80px;
         line-height: 100px;

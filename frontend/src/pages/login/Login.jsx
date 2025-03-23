@@ -3,8 +3,9 @@ import './Login.scss';
 import { Link, useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('user'); // Default role is 'user'
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
@@ -14,13 +15,20 @@ const Login = () => {
       const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password, role }), // Sending role info
       });
+
       const data = await response.json();
       if (response.ok) {
         setMessage('Login successful!');
+
+        // Redirect based on role
         setTimeout(() => {
-          navigate('/info');
+          if (role === 'admin') {
+            navigate('/admin-dashboard'); // Redirect to admin dashboard
+          } else {
+            navigate('/info'); // Redirect to user info page
+          }
         }, 1000);
       } else {
         setMessage(`Login failed: ${data.error}`);
@@ -35,9 +43,7 @@ const Login = () => {
       <div className='card'>
         <div className='left'>
           <h1>Hello World</h1>
-          <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quidem esse, dolores dolorum harum praesentium ipsum porro dolorem labore magnam tenetur.
-          </p>
+          <p>Welcome to BloodLink</p>
           <span>Don't have an account?</span>
           <Link to="/register">
             <button>Register</button>
@@ -48,10 +54,10 @@ const Login = () => {
           <h1>Login</h1>
           <form onSubmit={handleLogin}>
             <input
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
             <input
               type="password"
@@ -59,6 +65,13 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+
+            {/* Role Selection */}
+            <select value={role} onChange={(e) => setRole(e.target.value)}>
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+
             <button type="submit">Login</button>
           </form>
           <Link to="/forgot-password" className="forgot-password">

@@ -1,9 +1,15 @@
 const db = require('../config/db');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+require('dotenv').config(); // Ensure environment variables are loaded
 
-// Register a new user
+// Register a new user (with role)
 const register = (req, res) => {
-  const { username, email, password, name } = req.body;
+  const { username, email, password, name, role } = req.body;
+
+  if (!username || !email || !password || !name || !role) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
 
   // Hash the password
   bcrypt.hash(password, 10, (err, hash) => {
@@ -11,57 +17,78 @@ const register = (req, res) => {
       return res.status(500).json({ error: 'Error hashing password' });
     }
 
-    // Insert user into the database
-    const query = 'INSERT INTO users (username, email, password, name) VALUES (?, ?, ?, ?)';
-    db.query(query, [username, email, hash, name], (err, result) => {
+    // Insert user into the database with role
+    const query = 'INSERT INTO users (username, email, password, name, role) VALUES (?, ?, ?, ?, ?)';
+    db.query(query, [username, email, hash, name, role], (err, result) => {
       if (err) {
-        return res.status(500).json({ error: 'Error registering user' });
+        return res.status(500).json({ error: 'Error registering user', details: err.message });
       }
       res.status(201).json({ message: 'User registered successfully' });
     });
   });
 };
 
-// Login a user
+// Login a user (with role-based authentication)
 const login = (req, res) => {
-  const { username, password } = req.body;
+  console.log("🔍 Received Login Request:", req.body);
 
-  // Find the user by username
-  const query = 'SELECT * FROM users WHERE username = ?';
-  db.query(query, [username], (err, results) => {
-    if (err) {
-      return res.status(500).json({ error: 'Error finding user' });
+  const { email, password, role } = req.body;
+
+  if (!email || !password || !role) {
+    console.log("❌ Missing email, password, or role");
+    return res.status(400).json({ error: 'Email, password, and role are required' });
+  }
+
+  const sql = 'SELECT * FROM users WHERE email = ?';
+  db.query(sql, [email], async (err, result) => {
+    if (err) return res.status(500).json({ error: 'Database error', details: err.message });
+
+    if (result.length === 0) {
+      console.log("❌ User not found");
+      return res.status(400).json({ error: 'User not found' });
     }
 
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+    const user = result[0];
+    console.log("✅ User Found:", user);
+
+    // Check if the provided password matches the stored hashed password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      console.log("❌ Password does not match");
+      return res.status(400).json({ error: 'Invalid credentials' });
     }
 
-    const user = results[0];
+    // Check if the role matches the stored role
+    if (user.role !== role) {
+      console.log(`❌ Unauthorized access: Role mismatch (Expected: ${user.role}, Given: ${role})`);
+      return res.status(403).json({ error: `Unauthorized access as ${role}` });
+    }
 
-    // Compare the password with the hashed password
-    bcrypt.compare(password, user.password, (err, isMatch) => {
-      if (err) {
-        return res.status(500).json({ error: 'Error comparing passwords' });
-      }
+    // Generate a JWT token
+    const token = jwt.sign(
+      { id: user.id, username: user.username, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
-      if (!isMatch) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
+    console.log("✅ Login Successful");
 
-      res.status(200).json({ message: 'Login successful', user: { id: user.id, username: user.username, name: user.name } });
-    });
+    res.json({ message: 'Login successful', token, user: { id: user.id, username: user.username, email: user.email, role: user.role } });
   });
 };
 
+// Forgot Password (Simulated)
 const forgotPassword = (req, res) => {
   const { email } = req.body;
 
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
   // Simulate sending a password reset email
-  console.log(`Password reset email sent to: ${email}`);
+  console.log(`📩 Password reset email sent to: ${email}`);
 
   res.status(200).json({ message: 'Password reset instructions sent to your email.' });
 };
 
 module.exports = { register, login, forgotPassword };
-

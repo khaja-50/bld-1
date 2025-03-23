@@ -47,15 +47,23 @@
     min-height: 500px;
   }
   
-  .left {
-    flex: 1;
-    background: linear-gradient(0deg, rgba(106, 0, 0) 39%, rgba(202, 25, 25) 100%);
-    padding: 40px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    color: white;
+  ..left {
+    .left {
+      flex: 1;
+      background: linear-gradient(0deg, rgba(106, 0, 0, 0.544) 39%, rgba(202, 25, 25, 0.533) 100%),
+                  url("/assets/Online-Blood-Bank-Management-System.webp"); 
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      color: white;
+    }
+    
   }
+  
   
   .left h1 {
     font-size: 3rem;

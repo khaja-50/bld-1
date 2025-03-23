@@ -13,7 +13,7 @@ const Info = () => {
         <div className='left'>
           <h1>Hello World</h1>
           <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quidem esse, dolores dolorum harum praesentium ipsum porro dolorem labore magnam tenetur.
+           Welcome to Blood Donation Management system.
           </p>
           <span>Don't have an account?</span>
         </div>
