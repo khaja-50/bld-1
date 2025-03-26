@@ -1,27 +1,37 @@
+/* 🔹 General Form Styling */
 .form-container {
+  width: 100%;
   max-width: 500px;
-  margin: auto;
-  background: #fff;
+  margin: 30px auto;
   padding: 20px;
+  background: #fff;
   border-radius: 8px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-  margin-top: 30px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 h2 {
   text-align: center;
   color: #d32f2f;
+  margin-bottom: 15px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
 }
 
 label {
-  display: block;
-  margin: 10px 0 5px;
   font-weight: bold;
+  margin-top: 10px;
+  color: #555;
+  display: block;
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
   width: 100%;
-  padding: 8px;
+  padding: 10px;
   margin-bottom: 15px;
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -30,44 +40,139 @@ input, select, textarea {
 }
 
 textarea {
-  resize: vertical; /* Allows vertical resizing */
+  resize: vertical;
   min-height: 80px;
 }
 
-button {
-  width: 100%;
+/* 🔹 Checkbox Group Styling */
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: #f9f9f9;
   padding: 10px;
-  background-color: #d32f2f;
-  color: white;
-  border: none;
   border-radius: 5px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.3s;
+  border: 1px solid #ddd;
+  max-height: 220px; /* Makes it scrollable when too many checkboxes */
+  overflow-y: auto;
+  margin-top: 5px;
 }
 
-button:hover {
-  background-color: #b71c1c;
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  width: 100%; /* Ensures items wrap correctly */
+  max-width: 250px; /* Limits width for better layout */
 }
+
+.checkbox-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  appearance: none;
+  border: 2px solid #555;
+  border-radius: 3px;
+  background-color: #fff;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.checkbox-item input[type="checkbox"]:hover {
+  border-color: #d9534f;
+}
+
+.checkbox-item input[type="checkbox"]:checked {
+  background-color: #d9534f;
+  border-color: #d9534f;
+}
+
+.checkbox-item input[type="checkbox"]::after {
+  content: "✔";
+  font-size: 14px;
+  color: white;
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  display: none;
+}
+
+.checkbox-item input[type="checkbox"]:checked::after {
+  display: block;
+}
+
+.checkbox-item label {
+  font-size: 16px;
+  color: #333;
+  cursor: pointer;
+  flex-grow: 1;
+}
+
+/* 🔹 Dropdown Menu Styling */
 .dropdown-menu {
   display: flex;
   flex-direction: column;
   padding: 10px;
   border: 1px solid #ccc;
   background-color: white;
-  max-height: 200px; /* Limit height to make it scrollable */
-  overflow-y: auto; /* Enable scrolling if necessary */
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .dropdown-item {
   display: flex;
-  align-items: center; /* Ensures checkbox and text are aligned */
-  gap: 10px; /* Adds space between checkbox and text */
+  align-items: center;
+  gap: 10px;
   padding: 5px 0;
 }
 
 .dropdown-item input[type="checkbox"] {
   width: 16px;
   height: 16px;
-  margin: 0; /* Removes any extra margin causing misalignment */
+  margin: 0;
+}
+
+/* 🔹 Error Messages */
+.error {
+  color: red;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+/* 🔹 Submit Button */
+button {
+  width: 100%;
+  padding: 12px;
+  background-color: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+button:hover {
+  background-color: #b71c1c;
+}
+
+/* 🔹 Responsive Design */
+@media (max-width: 600px) {
+  .form-container {
+    padding: 15px;
+  }
+
+  input, select, button {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  .checkbox-item {
+    gap: 8px;
+  }
+
+  .checkbox-item label {
+    font-size: 14px;
+  }
 }

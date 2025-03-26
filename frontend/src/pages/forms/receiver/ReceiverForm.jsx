@@ -4,7 +4,6 @@ import "../FormStyles.css"; // Import a CSS file for styling
 // Import country-state-district data
 import countryData from "/src/data/countryData.json";
 
-
 const ReceiverForm = () => {
   const [receiver, setReceiver] = useState({
     fullName: "",
@@ -15,6 +14,7 @@ const ReceiverForm = () => {
     district: "",
     contactNumber: "",
     reasonForRequest: "",
+    prescription: null, // Added prescription field
   });
 
   const [states, setStates] = useState([]);
@@ -22,7 +22,11 @@ const ReceiverForm = () => {
 
   // Handle input field changes
   const handleChange = (e) => {
-    setReceiver({ ...receiver, [e.target.name]: e.target.value });
+    if (e.target.name === "prescription") {
+      setReceiver({ ...receiver, prescription: e.target.files[0] });
+    } else {
+      setReceiver({ ...receiver, [e.target.name]: e.target.value });
+    }
   };
 
   // Update states when a country is selected
@@ -50,7 +54,17 @@ const ReceiverForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
     console.log("Receiver Details:", receiver);
+    
+    // Check if a file is uploaded
+    if (receiver.prescription) {
+      console.log("Uploaded Prescription:", receiver.prescription.name);
+    } else {
+      alert("Please upload a doctor's prescription.");
+      return;
+    }
+
     alert("Receiver request submitted successfully!");
   };
 
@@ -104,6 +118,10 @@ const ReceiverForm = () => {
 
         <label>Reason for Blood Request:</label>
         <textarea name="reasonForRequest" value={receiver.reasonForRequest} onChange={handleChange} required></textarea>
+
+        {/* File Upload for Prescription */}
+        <label>Doctor's Prescription (PDF or Image):</label>
+        <input type="file" name="prescription" accept=".pdf, .jpg, .jpeg, .png" onChange={handleChange} required />
 
         <button type="submit">Submit Request</button>
       </form>

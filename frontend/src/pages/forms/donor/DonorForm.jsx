@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../FormStyles.css";
+import MapComponent from "@/components/MapComponent"; // Ensure correct path
 import countryData from "/src/data/countryData.json";
 
 const DonorForm = () => {
@@ -10,16 +11,18 @@ const DonorForm = () => {
     lastDonationDate: "",
     donationGap: "",
     healthCondition: [],
+    availabilityStart: "",
+    availabilityEnd: "",
     country: "",
     state: "",
     district: "",
     contactNumber: "",
+    location: { lat: null, lng: null },
   });
 
+  const [errors, setErrors] = useState({});
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
-  const [errors, setErrors] = useState({});
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const restrictedConditions = [
     "HIV",
@@ -33,64 +36,70 @@ const DonorForm = () => {
     "Recent Surgery",
     "Malaria (in last 3 months)",
     "Pregnancy",
-    "None of the Above",
   ];
 
-  // Handle input changes
+  // Handle form input changes
   const handleChange = (e) => {
-    setDonor({ ...donor, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setDonor({ ...donor, [name]: value });
 
-    // Auto-calculate donation gap when last donation date is selected
-    if (e.target.name === "lastDonationDate") {
-      const selectedDate = new Date(e.target.value);
+    if (name === "lastDonationDate") {
+      const selectedDate = new Date(value);
       const today = new Date();
-      const monthDiff = (today.getFullYear() - selectedDate.getFullYear()) * 12 + today.getMonth() - selectedDate.getMonth();
+      const monthDiff =
+        (today.getFullYear() - selectedDate.getFullYear()) * 12 +
+        today.getMonth() - selectedDate.getMonth();
       setDonor((prev) => ({ ...prev, donationGap: monthDiff }));
     }
   };
 
-  // Handle health condition selection in dropdown checklist
-  const handleCheckboxChange = (condition) => {
-    let updatedConditions = [...donor.healthCondition];
+  // ✅ Handle Health Condition Selection
+  const handleHealthConditionChange = (e) => {
+    const { value, checked } = e.target;
 
-    if (condition === "None of the Above") {
-      updatedConditions = ["None of the Above"];
+    if (value === "None of the Above") {
+      setDonor((prev) => ({
+        ...prev,
+        healthCondition: checked ? ["None of the Above"] : [],
+      }));
     } else {
-      if (updatedConditions.includes("None of the Above")) {
-        updatedConditions = [];
-      }
+      setDonor((prev) => {
+        let updatedConditions = prev.healthCondition.filter((c) => c !== "None of the Above");
 
-      if (updatedConditions.includes(condition)) {
-        updatedConditions = updatedConditions.filter((c) => c !== condition);
-      } else {
-        updatedConditions.push(condition);
-      }
+        if (checked) {
+          updatedConditions.push(value);
+        } else {
+          updatedConditions = updatedConditions.filter((c) => c !== value);
+        }
+
+        return { ...prev, healthCondition: updatedConditions };
+      });
     }
-
-    setDonor({ ...donor, healthCondition: updatedConditions });
   };
 
-  // Validate form fields
+  // ✅ Validate form inputs
   const validateForm = () => {
     let validationErrors = {};
 
-    if (donor.age < 18 || donor.age > 65) {
+    if (!donor.fullName.trim()) validationErrors.fullName = "Full Name is required.";
+    if (!donor.age || isNaN(donor.age) || donor.age < 18 || donor.age > 65)
       validationErrors.age = "Age must be between 18 and 65.";
+    if (!donor.bloodType) validationErrors.bloodType = "Please select a blood type.";
+    if (donor.donationGap < 3) validationErrors.donationGap = "Minimum donation gap is 3 months.";
+
+    // ❌ Prevent registration if donor has restricted health conditions
+    const hasRestrictedCondition = donor.healthCondition.some((condition) =>
+      restrictedConditions.includes(condition)
+    );
+
+    if (hasRestrictedCondition) {
+      validationErrors.healthCondition = "You are not eligible to donate due to health conditions.";
     }
 
-    if (donor.donationGap < 3) {
-      validationErrors.donationGap = "Minimum donation gap is 3 months.";
-    }
-
-    if (donor.healthCondition.length === 0) {
-      validationErrors.healthCondition = "Please select at least one option.";
-    } else if (donor.healthCondition.some((condition) => condition !== "None of the Above")) {
-      validationErrors.healthCondition = "Individuals with these conditions are not eligible for blood donation.";
-    }
-
-    if (!/^\d{10}$/.test(donor.contactNumber)) {
+    if (!/^\d{10}$/.test(donor.contactNumber))
       validationErrors.contactNumber = "Enter a valid 10-digit phone number.";
-    }
+    if (!donor.availabilityStart || !donor.availabilityEnd)
+      validationErrors.availabilityTime = "Please select an availability time range.";
 
     setErrors(validationErrors);
     return Object.keys(validationErrors).length === 0;
@@ -114,6 +123,7 @@ const DonorForm = () => {
     }
   }, [donor.state]);
 
+  // ✅ Prevent submission if validation fails
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
@@ -128,6 +138,7 @@ const DonorForm = () => {
       <form onSubmit={handleSubmit}>
         <label>Full Name:</label>
         <input type="text" name="fullName" value={donor.fullName} onChange={handleChange} required />
+        {errors.fullName && <p className="error">{errors.fullName}</p>}
 
         <label>Age:</label>
         <input type="number" name="age" value={donor.age} onChange={handleChange} required />
@@ -135,69 +146,47 @@ const DonorForm = () => {
 
         <label>Blood Type:</label>
         <select name="bloodType" value={donor.bloodType} onChange={handleChange} required>
-          <option value="">Select</option>
-          <option value="A+">A+</option>
-          <option value="A-">A-</option>
-          <option value="B+">B+</option>
-          <option value="B-">B-</option>
-          <option value="O+">O+</option>
-          <option value="O-">O-</option>
-          <option value="AB+">AB+</option>
-          <option value="AB-">AB-</option>
+          <option value="">Select Blood Type</option>
+          {["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"].map((type) => (
+            <option key={type} value={type}>{type}</option>
+          ))}
         </select>
+        {errors.bloodType && <p className="error">{errors.bloodType}</p>}
 
         <label>Last Donation Date:</label>
-        <input type="date" name="lastDonationDate" value={donor.lastDonationDate} onChange={handleChange} required />
+        <input type="date" name="lastDonationDate" value={donor.lastDonationDate} onChange={handleChange} />
 
-        <label>Gap Since Last Donation (in months):</label>
+        <label>Donation Gap (months):</label>
         <input type="number" name="donationGap" value={donor.donationGap} readOnly />
         {errors.donationGap && <p className="error">{errors.donationGap}</p>}
 
+        <label>Availability Time:</label>
+        <input type="time" name="availabilityStart" value={donor.availabilityStart} onChange={handleChange} required />
+        <input type="time" name="availabilityEnd" value={donor.availabilityEnd} onChange={handleChange} required />
+        {errors.availabilityTime && <p className="error">{errors.availabilityTime}</p>}
+
         <label>Health Condition:</label>
-        <div className="dropdown">
-          <button type="button" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-            {donor.healthCondition.length > 0 ? donor.healthCondition.join(", ") : "Select"}
-          </button>
-          {isDropdownOpen && (
-            <div className="dropdown-menu">
-              {restrictedConditions.map((condition, index) => (
-                <label key={index} className="dropdown-item">
-                  <input type="checkbox" value={condition} checked={donor.healthCondition.includes(condition)} onChange={() => handleCheckboxChange(condition)} />
-                  {condition}
-                </label>
-              ))}
+        <div className="checkbox-group">
+          {restrictedConditions.concat(["None of the Above"]).map((condition, index) => (
+            <div key={index} className="checkbox-item">
+              <input
+                type="checkbox"
+                value={condition}
+                checked={donor.healthCondition.includes(condition)}
+                onChange={handleHealthConditionChange}
+              />
+              <label>{condition}</label>
             </div>
-          )}
+          ))}
         </div>
+
         {errors.healthCondition && <p className="error">{errors.healthCondition}</p>}
-
-        <label>Country:</label>
-        <select name="country" value={donor.country} onChange={handleChange} required>
-          <option value="">Select</option>
-          {countryData.map((country, index) => (
-            <option key={index} value={country.name}>{country.name}</option>
-          ))}
-        </select>
-
-        <label>State:</label>
-        <select name="state" value={donor.state} onChange={handleChange} required disabled={!donor.country}>
-          <option value="">Select</option>
-          {states.map((state, index) => (
-            <option key={index} value={state.name}>{state.name}</option>
-          ))}
-        </select>
-
-        <label>District:</label>
-        <select name="district" value={donor.district} onChange={handleChange} required disabled={!donor.state}>
-          <option value="">Select</option>
-          {districts.map((district, index) => (
-            <option key={index} value={district}>{district}</option>
-          ))}
-        </select>
 
         <label>Contact Number:</label>
         <input type="text" name="contactNumber" value={donor.contactNumber} onChange={handleChange} required />
-        {errors.contactNumber && <p className="error">{errors.contactNumber}</p>}
+
+        <label>Location:</label>
+        <MapComponent location={donor.location} setLocation={(newLocation) => setDonor({ ...donor, location: newLocation })} />
 
         <button type="submit">Register as Donor</button>
       </form>
